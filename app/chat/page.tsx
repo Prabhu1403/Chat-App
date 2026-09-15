@@ -8,6 +8,8 @@ import { Send, Hash, ArrowLeft, Phone, Video, MoreVertical, Smile, Paperclip, Ca
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 interface Message {
   room?: string;
   author?: string;
@@ -29,7 +31,7 @@ function ChatContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [groupMessageList, setGroupMessageList] = useState<Message[]>([]);
-  const [senderProfile, setSenderProfile] = useState<any>([]);
+  // const [senderProfile, setSenderProfile] = useState<any>([]);
   const { isSomeoneTyping, emitTyping } = useTypingIndicator({
     socket,
     senderId: userId,
@@ -38,35 +40,58 @@ function ChatContent() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  console.log(room, 'room');
+ 
 
-  useEffect(() => {
-    groupMessageList.map(async (msg: Message) => {
-      try {
-        const senderId = msg.senderId;
-        const response = await axios.get(`http://localhost:8000/api/get-profile/${senderId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
+  // useEffect(() => {
 
-        });
-    console.log("raw response.data:", response.data)
-        setSenderProfile((prev: any) => [...prev, response?.data?.data]);
+  const getProfile = async () => {
+    // Get unique sender IDs to avoid duplicate API calls
+    const uniqueSenderIds = Array.from(new Set(groupMessageList.map(msg => msg.senderId).filter(Boolean)));
+    
+    const profiles = await Promise.all(
+      uniqueSenderIds.map(async (senderId) => {
+        try {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/get-profile/${senderId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+          });
+          return response.data?.data;
+        } catch (err) {
+          console.error(`Error fetching profile for ${senderId}:`, err);
+          return null;
+        }
+      })
+    );
+    
+    // Return only valid profiles (filter out nulls from errors)
+    return profiles.filter(Boolean);
+  };
 
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      }
+  const { data: senderProfile = [] } = useQuery<any[]>({
+    queryKey: ["groupMessageListProfiles", groupMessageList.map(m => m.senderId).join(",")],
+    queryFn: getProfile,
+    enabled: groupMessageList.length > 0,
+  });
+console.log("senderProfile>>",senderProfile)
+console.log("groupMessageList",groupMessageList);
 
-    })
-
-  }, [groupMessageList]);
 
 
+const profileMap = useMemo(()=>{
+  const map = new Map()
+  senderProfile.forEach((item: any) => {
+    map.set(item.userId, item)
+  })
+  console.log("map",map);
   
+  return map
+},[senderProfile])
+
 
 const getSenderName = (senderId: string): string => {
-  const profile = senderProfile.find((item: any) => item.userId === senderId);
+  const profile = profileMap.get(senderId)
   console.log(profile, "profile");
   
   return profile?profile.name:"Anonymous";
@@ -83,7 +108,7 @@ const getSenderName = (senderId: string): string => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await axios.get(`http://localhost:8000/api/getGroupMessage?groupId=${groupId}&&userId=${userId}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getGroupMessage?groupId=${groupId}&&userId=${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json"

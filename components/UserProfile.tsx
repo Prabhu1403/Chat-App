@@ -47,7 +47,7 @@ export default function UserProfile() {
       if (data.bio) formData.append("bio", data.bio);
       if (selectedFile) formData.append("profilePicture", selectedFile);
 
-      const response = await axios.put(`http://localhost:8000/api/update-profile/${data.userId}`, formData, {
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_BASE_URL}/api/update-profile/${data.userId}`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "multipart/form-data"

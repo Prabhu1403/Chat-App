@@ -50,7 +50,7 @@ export default function Sidebar() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfileData | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<"chats" | "calls" | "contacts">("chats");
+  const [activeTab, setActiveTab] = useState<"chats" | "Unread" | "Favourites">("chats");
   const [activeToggle, setActiveToggle] = useState<"personal" | "groups" | "archived">("personal");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [groups, setGroups] = useState<GroupItem[]>([]);
@@ -124,7 +124,7 @@ export default function Sidebar() {
       if (!userId) return;
 
       try {
-        const response = await axios.get(`http://localhost:8000/api/conversations`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/conversations`, {
           params: { userId },
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -164,7 +164,7 @@ export default function Sidebar() {
     
     if (!user?.userId) return 0;
     try {
-      const response = await axios.get("http://localhost:8000/api/getUnreadMessage", {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getUnreadMessage`, {
         params: {
           groupId: groupId,
           userId: user.userId
@@ -190,7 +190,7 @@ export default function Sidebar() {
 
   const getLastGroupMessage = async (groupId: number) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/getLastMessage/${groupId}`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getLastMessage/${groupId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -210,7 +210,7 @@ export default function Sidebar() {
     const fetchGroups = async () => {
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        const response = await axios.get("http://localhost:8000/api/getgroups", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getgroups`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -300,7 +300,7 @@ export default function Sidebar() {
     const userId = user.userId || (user as any).id;
 
     try {
-      await axios.delete("http://localhost:8000/api/messages/conversation", {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/messages/conversation`, {
         data: { userId, otherUserId },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -320,7 +320,7 @@ export default function Sidebar() {
     const userId = user.userId || (user as any).id;
 
     try {
-      await axios.put("http://localhost:8000/api/messages/archive", {
+      await axios.put(`${process.env.NEXT_PUBLIC_BASE_URL}/api/messages/archive`, {
         userId,
         otherUserId
       }, {
@@ -369,13 +369,18 @@ export default function Sidebar() {
   const filteredConversations = conversations.filter(
     (c) => {
       const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
+      if (activeTab === "Unread" && (c.unread || 0) === 0) return false;
       if (activeToggle === "archived") return c.is_archived && matchesSearch;
       return !c.is_archived && matchesSearch;
     }
   );
 
   const filteredGroups = groups.filter(
-    (g) => g.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (g) => {
+      const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase());
+      if (activeTab === "Unread" && (g.unreadCount || 0) === 0) return false;
+      return matchesSearch;
+    }
   );
 
   if (!user) return null;

@@ -41,7 +41,7 @@ export default function CreateNewGroup({ isOpen, onClose, onSubmit }: CreateNewG
 
     const createGroup = async (data: any) => {
         const token = localStorage.getItem('token')
-        const response = await axios.post('http://localhost:8000/api/creategroup', data, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/creategroup`, data, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

@@ -22,7 +22,7 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
     const fetchMetadata = async () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       try {
-        const res = await axios.get(`http://localhost:8000/api/getLastMessage/${group.id}`, {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getLastMessage/${group.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const lastMessage = res.data.lastMessage?.message ?? null;
@@ -79,7 +79,7 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
     
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      await axios.delete(`http://localhost:8000/api/deleteGroup/${group.id}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/deleteGroup/${group.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success("Group deleted successfully");
@@ -178,7 +178,7 @@ export default function GroupsPage() {
 
   const getGroups = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const response = await axios.get('http://localhost:8000/api/getgroups', {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getgroups`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -196,7 +196,7 @@ export default function GroupsPage() {
   const handleMakeRequest = async (data: any) => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const response = await axios.post('http://localhost:8000/api/join-request', data, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/join-request`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

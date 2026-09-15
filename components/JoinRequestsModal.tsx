@@ -25,7 +25,7 @@ export default function JoinRequestsModal({ isOpen, onClose }: JoinRequestsModal
             toast.error("User ID not found.");
             return { requests: [] };
         }
-    const response = await axios.get(`http://localhost:8000/api/join-requests/${userId}`, {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/join-requests/${userId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
    
@@ -52,7 +52,7 @@ export default function JoinRequestsModal({ isOpen, onClose }: JoinRequestsModal
 
 const acceptFunction =  async (userId: string) => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      return axios.post(`http://localhost:8000/api/accept-requests/${userId}`, {}, {
+      return axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/accept-requests/${userId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
     }
@@ -69,7 +69,7 @@ const acceptMutation = useMutation({
 
   const rejectFunction = async (id: number) => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      return axios.post(`http://localhost:8000/api/reject-requests/${id}`, {}, {
+      return axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/reject-requests/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
     }

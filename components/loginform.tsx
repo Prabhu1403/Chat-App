@@ -27,7 +27,7 @@ export default function LoginForm() {
     const router = useRouter();
 
     const mutateFunction = async (data: FormValues) => {
-        const response = await axios.post("http://localhost:8000/api/login", { ...data, rememberMe }, { withCredentials: true });
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/login`, { ...data, rememberMe }, { withCredentials: true });
 
         console.log("responseData>>>", response.data);
         return response.data;

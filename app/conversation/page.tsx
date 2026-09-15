@@ -120,7 +120,7 @@ function ConversationContent() {
     const userId = user.userId || user.id;
 
     try {
-      await axios.delete("http://localhost:8000/api/messages/conversation", {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/messages/conversation`, {
         data: { userId, otherUserId },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -148,7 +148,7 @@ function ConversationContent() {
     const userId = user.userId || user.id;
 
     try {
-      await axios.put("http://localhost:8000/api/messages/archive", {
+      await axios.put(`${process.env.NEXT_PUBLIC_BASE_URL}/api/messages/archive`, {
         userId,
         otherUserId
       }, {
@@ -234,7 +234,7 @@ function ConversationContent() {
       const userId = user.userId || user.id;
 
       try {
-        const response = await axios.get(`http://localhost:8000/api/conversations`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/conversations`, {
           params: { userId },
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

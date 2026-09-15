@@ -27,7 +27,7 @@ export default function Form() {
     const router = useRouter();
 
     const mutateFunction = async (data: FormValues & { userId: string }) => {
-        const response = await axios.post("http://localhost:8000/api/signup", data);
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/signup`, data);
         console.log("responceData>>>", response.data);
         return response.data;
     }

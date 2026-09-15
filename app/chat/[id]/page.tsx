@@ -83,7 +83,7 @@ function ChatContent() {
   //       return;
   //     }
   //     try {
-  //       const response = await axios.get(`http://localhost:8000/api/get-profile/${receiverId}`, {
+  //       const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/get-profile/${receiverId}`, {
   //         headers: { Authorization: `Bearer ${token}` },
   //       });
   //       if (response.data && response.data.data) {
@@ -107,7 +107,7 @@ const getReceiverProfile=async ()=>{
     return null
   }
   try{
-    const response = await axios.get(`http://localhost:8000/api/get-profile/${receiverId}`,{
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/get-profile/${receiverId}`,{
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data.data
@@ -179,7 +179,7 @@ const getReceiverProfile=async ()=>{
       if (!uid || !receiverId) return [];
 
       try {
-        const response = await axios.get(`http://localhost:8000/api/messages`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/messages`, {
           params: { senderId: uid, receiverId },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -410,7 +410,7 @@ const getReceiverProfile=async ()=>{
     console.log("msg>>>>", msg);
 
     try {
-      await axios.delete("http://localhost:8000/api/messages/delete-for-me", {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/messages/delete-for-me`, {
         data: { messageId: msg.id, userId: uid },
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });

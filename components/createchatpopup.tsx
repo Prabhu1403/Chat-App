@@ -48,7 +48,7 @@ const router = useRouter();
         return;
       }
 
-      const response = await axios.get("http://localhost:8000/api/get-receiver-profile", {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/get-receiver-profile`, {
         params: payload,
         headers: {
           Authorization: `Bearer ${token}`,
