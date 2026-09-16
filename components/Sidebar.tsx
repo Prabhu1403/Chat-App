@@ -208,27 +208,24 @@ export default function Sidebar() {
   // Fetch groups
   useEffect(() => {
     const fetchGroups = async () => {
+      if (!user?.userId) return; // Wait for user to be loaded
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getgroups`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getMyGroups/${user.userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
         const fetchedGroups = response.data?.groups || [];
         
-        if (user?.userId) {
-          const groupsWithUnread = await Promise.all(
-            fetchedGroups.map(async (group: GroupItem) => {
-              const count = await getUnreadCount(group.id);
-              const lastMsg = await getLastGroupMessage(group.id);
-              socket.emit("join_room", String(group.id));
-              return { ...group, unreadCount: count, lastMessage: lastMsg };
-            })
-          );
-          setGroups(groupsWithUnread);          
-        } else {
-          setGroups(fetchedGroups);
-        }
+        const groupsWithUnread = await Promise.all(
+          fetchedGroups.map(async (group: GroupItem) => {
+            const count = await getUnreadCount(group.id);
+            const lastMsg = await getLastGroupMessage(group.id);
+            socket.emit("join_room", String(group.id));
+            return { ...group, unreadCount: count, lastMessage: lastMsg };
+          })
+        );
+        setGroups(groupsWithUnread);
       } catch (err) {
         console.error("Error fetching groups:", err);
       }
@@ -240,11 +237,25 @@ export default function Sidebar() {
         console.log("messageCount>>>",messageCount);
     },[messageCount])
 
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    if (socket.connected) socket.disconnect();
-    router.push("/login");
+  const handleSignOut = async () => {
+    try {
+      const userId = user?.userId || (user as any)?.id;
+      const token = localStorage.getItem("token");
+      if (userId && token) {
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/update-lastseen/${userId}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+    } catch (error) {
+      console.error("Error updating last seen on logout:", error);
+    } finally {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      if (socket.connected) socket.disconnect();
+      router.push("/login");
+    }
   };
 
   const handleConversationClick = async (chatId: string) => {

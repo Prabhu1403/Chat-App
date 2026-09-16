@@ -27,7 +27,7 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
         });
         const lastMessage = res.data.lastMessage?.message ?? null;
         setLastMessage(lastMessage);
-      } catch(err) {
+      } catch (err) {
         console.error("Failed to fetch group metadata", err);
       }
     };
@@ -39,35 +39,35 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
     const fetchUnreadCount = async () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       try {
-        socket.emit("get_group_unread_message",{
+        socket.emit("get_group_unread_message", {
           groupId: group.id,
           userId: parsedUserId.userId,
-        },(res:any)=>{
+        }, (res: any) => {
           console.log("group count has been fetched successfully");
           setUnreadCount(res.unreadCount);
         })
-      } catch(err) {
+      } catch (err) {
         console.error("Failed to fetch unread count", err);
       }
     };
     fetchUnreadCount();
   }, [group.id, parsedUserId?.userId]);
 
-  console.log("unreadCountMEsssage",unreadCount);
-  
+  console.log("unreadCountMEsssage", unreadCount);
+
   const handleCardClick = async () => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-      socket.emit("create_message_read",{
+      socket.emit("create_message_read", {
         groupId: group.id,
         userId: parsedUserId?.userId
-      },(responce:any)=>{
-        console.log("message read successfully",responce);
-        
+      }, (responce: any) => {
+        console.log("message read successfully", responce);
+
       });
-    
-    } catch(err) {
+
+    } catch (err) {
       console.error(err);
     }
     router.push(`/chat?userId=${encodeURIComponent(parsedUserId?.userId || "Anonymous")}&room=${encodeURIComponent(group.name)}&groupId=${encodeURIComponent(group.id)}`);
@@ -76,7 +76,7 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
   const handleDeleteGroup = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this group?")) return;
-    
+
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/deleteGroup/${group.id}`, {
@@ -84,13 +84,13 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
       });
       toast.success("Group deleted successfully");
       if (refetch) refetch();
-    } catch(err: any) {
+    } catch (err: any) {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to delete group");
     }
   };
 
-  
+
   const isMember = group.members?.some((m: any) => m.userId === parsedUserId?.userId) || group.createdBy === parsedUserId?.userId;
 
   return (
@@ -132,7 +132,7 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
           </div>
           <div className="flex items-center gap-2">
             {group.createdBy === parsedUserId?.userId && (
-              <button 
+              <button
                 onClick={handleDeleteGroup}
                 className="text-[#667781] hover:text-red-500 p-1 rounded transition-colors z-10 opacity-0 group-hover:opacity-100"
                 title="Delete Group"
@@ -141,8 +141,8 @@ const GroupCard = ({ group, parsedUserId, handleMakeRequest, router, refetch }: 
               </button>
             )}
             {!isMember ? (
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleMakeRequest({ groupId: group.id, userId: parsedUserId.userId }) }} 
+              <button
+                onClick={(e) => { e.stopPropagation(); handleMakeRequest({ groupId: group.id, userId: parsedUserId.userId }) }}
                 className="text-[11px] font-bold text-white bg-[#2196F3] hover:bg-[#1976D2] transition-colors px-3 py-1.5 rounded-full"
               >
                 Join
@@ -178,19 +178,24 @@ export default function GroupsPage() {
 
   const getGroups = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getgroups`, {
+    let url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/getgroups`;
+    if (showMyGroups && parsedUserId?.userId) {
+      url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/getMyGroups/${parsedUserId.userId}`;
+    }
+    const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log("group>>",response.data);
-    
+    console.log("group>>", response.data);
+
     return response.data;
   }
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["groups"],
+    queryKey: ["groups", showMyGroups, parsedUserId?.userId],
     queryFn: getGroups,
+    enabled: !!parsedUserId?.userId || !showMyGroups,
   })
 
   const handleMakeRequest = async (data: any) => {
@@ -231,8 +236,8 @@ export default function GroupsPage() {
               <button
                 onClick={() => setShowMyGroups(!showMyGroups)}
                 className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${showMyGroups
-                    ? "bg-[#2196F3] text-white"
-                    : "bg-white border border-[#E9EDEF] text-[#54656F] hover:bg-[#F0F2F5]"
+                  ? "bg-[#2196F3] text-white"
+                  : "bg-white border border-[#E9EDEF] text-[#54656F] hover:bg-[#F0F2F5]"
                   }`}
               >
                 {showMyGroups ? "Explore Groups" : "My Groups"}
@@ -277,12 +282,12 @@ export default function GroupsPage() {
                 {(data?.groups || [])
                   .filter((group: any) => showMyGroups ? group.createdBy === parsedUserId?.userId : group.createdBy !== parsedUserId?.userId)
                   .map((group: any) => (
-                    <GroupCard 
-                      key={group.id} 
-                      group={group} 
-                      parsedUserId={parsedUserId} 
-                      handleMakeRequest={handleMakeRequest} 
-                      router={router}  
+                    <GroupCard
+                      key={group.id}
+                      group={group}
+                      parsedUserId={parsedUserId}
+                      handleMakeRequest={handleMakeRequest}
+                      router={router}
                       refetch={refetch}
                     />
                   ))}

@@ -110,7 +110,15 @@ const getReceiverProfile=async ()=>{
     const response = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/get-profile/${receiverId}`,{
     headers: { Authorization: `Bearer ${token}` },
   });
-  return response.data.data
+  console.log("receiver lastseen data",response.data.data);
+  const data = response.data.data
+
+  const lastSeenDate = new Date(data.lastSeen);
+const istString = lastSeenDate.toLocaleString("en-IN", {
+  timeZone: "Asia/Kolkata",
+});
+console.log(istString); 
+  return {...data,lastSeen:istString}
   }
   catch(error:any){
     if(error.response?.status===401){
@@ -605,11 +613,12 @@ finally{
                   <span className="text-[#25D366] font-medium">typing...</span>
                 ) : onlineUsers.includes(receiverId as string) ? (
                   "online"
-                ) : receiver?.lastseen ? (
-                  `last seen at ${receiver.lastseen}`
+                ) : receiver?.lastSeen ? (
+
+                  `last seen ${receiver.lastSeen}`
                 ) : (
-                  `last seen at ${receiver?.phone || ""}`
-                )}
+                  "last seen recently"
+                )} 
               </p>
             </div>
           </div>
